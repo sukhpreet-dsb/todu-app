@@ -1,12 +1,16 @@
 import { Request, Response } from "express";
 import Todu from "../models/todo.model";
+import sendResponse from "../helpers";
 
 export const getTodos = async (req: Request, res: Response) => {
   try {
     const todos = await Todu.find();
-    res.status(200).json(todos);
+    sendResponse(res, 200, { success: true, data: todos });
   } catch (error) {
-    res.status(500).json({ error: "Failed to fetch todos" });
+    sendResponse(res, 500, {
+      success: false,
+      errorMessage: "Failed to fetch todos",
+    });
   }
 };
 
@@ -14,11 +18,20 @@ export const getSingleTodo = async (req: Request, res: Response) => {
   try {
     const singleTodo = await Todu.findById(req.params.id);
     if (!singleTodo) {
-      return res.status(404).json({ message: "Todo not found" });
+      return sendResponse(res, 404, {
+        success: false,
+        errorMessage: "Todo not found",
+      });
     }
-    return res.status(200).json(singleTodo);
+    return sendResponse(res, 200, {
+      success: true,
+      data: singleTodo,
+    });
   } catch (error) {
-    res.status(500).json({ error: "Failed to fetch todo" });
+    sendResponse(res, 500, {
+      success: false,
+      errorMessage: "Failed to fetch todo",
+    });
   }
 };
 
@@ -26,9 +39,15 @@ export const createNewTodo = async (req: Request, res: Response) => {
   try {
     const { title, description } = req.body;
     const newTodo = await Todu.create({ title, description });
-    res.status(201).json(newTodo);
+    sendResponse(res, 201, {
+      success: true,
+      data: newTodo,
+    });
   } catch (error) {
-    res.status(500).json({ error });
+    sendResponse(res, 500, {
+      success: false,
+      errorMessage: "Internal Server Error",
+    });
   }
 };
 
@@ -38,11 +57,20 @@ export const updateTodo = async (req: Request, res: Response) => {
       new: true,
     });
     if (!updateTodo) {
-      return res.status(404).json({ message: "Todo not found" });
+      sendResponse(res, 404, {
+        success: false,
+        errorMessage: "Todo not found",
+      });
     }
-    res.status(200).json(updateTodo);
+    sendResponse(res, 200, {
+      success: true,
+      data: updateTodo,
+    });
   } catch (error) {
-    res.status(500).json({ error: "Failed to update todo" });
+    sendResponse(res, 500, {
+      success: false,
+      errorMessage: "Failed to update todo",
+    });
   }
 };
 
@@ -50,9 +78,19 @@ export const deleteTodo = async (req: Request, res: Response) => {
   try {
     const deletedTodo = await Todu.findByIdAndDelete(req.params.id);
     if (!deletedTodo)
-      return res.status(404).json({ message: "Todo not found" });
-    res.status(200).json({ message: "Todo deleted successfully" });
+      return sendResponse(res, 500, {
+        success: false,
+        errorMessage: "Todo not found",
+      });
+
+    sendResponse(res, 200, {
+      success: true,
+      data: deletedTodo,
+    });
   } catch (error) {
-    res.status(500).json({ error: "Failed to delete todo" });
+    sendResponse(res, 500, {
+      success: false,
+      errorMessage: "Failed to delete todo",
+    });
   }
 };

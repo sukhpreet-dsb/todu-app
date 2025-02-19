@@ -1,7 +1,7 @@
 import app from "./app";
 import { connectDB } from "./config/db";
 
-const port = 5000;
+const port = 4000;
 connectDB()
   .then(() => {
     console.log("MongoDB Connected Successfully");
