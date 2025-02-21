@@ -3,6 +3,11 @@ import { ZodError, ZodSchema } from "zod";
 import ErrorResponse from "./interfaces/ErrorResponse";
 import sendResponse from "./helpers";
 import jwt from "jsonwebtoken";
+import dotenv from "dotenv";
+
+dotenv.config();
+
+const secret_key = process.env.JWT_SECRET || "";
 
 export function notFound(req: Request, res: Response, next: NextFunction) {
   res.status(404);
@@ -63,7 +68,7 @@ export const authMiddleware = (
   }
 
   try {
-    const verified = jwt.verify(token.replace("Bearer ", ""), "sagdjhsgdaj");
+    const verified = jwt.verify(token.replace("Bearer ", ""), secret_key);
     req.body.user = verified;
     next();
   } catch (error) {
