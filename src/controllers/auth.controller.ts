@@ -92,6 +92,7 @@ export const signin = async (req: Request, res: Response) => {
 
     return sendResponse(res, 200, {
       success: true,
+      successMessage: "Sign in successfull",
       data: { token, refreshtoken, user },
     });
   } catch (error) {
@@ -200,7 +201,7 @@ export const forgotPassword = async (req: Request, res: Response) => {
     user.resetPasswordExpires = new Date(Date.now() + 15 * 60 * 1000);
     await user.save();
 
-    const resetLink = `http://localhost:4000/reset-password?token=${resetToken}`;
+    const resetLink = `http://localhost:5173/reset-password/${resetToken}`;
     await sendResetEmail(user.email, resetLink);
 
     return sendResponse(res, 200, {
