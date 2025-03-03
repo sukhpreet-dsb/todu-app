@@ -16,7 +16,6 @@ const app = express();
 app.use(cors({
   origin: 'http://localhost:5173',
 }));
-// app.options('*', cors());
 app.use(morgan("dev"));
 app.use(helmet());
 app.use(express.json());
