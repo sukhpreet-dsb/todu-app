@@ -25,9 +25,6 @@ export function errorHandler(
   const statusCode = res.statusCode !== 200 ? res.statusCode : 500;
   res.status(statusCode);
   if (err instanceof ZodError) {
-    console.dir(err, {
-      depth: Infinity,
-    });
     const errorMsg = err.issues
       .map((issue) => issue.path.join(" ") + " " + issue.message)
       .join("\n");
@@ -72,7 +69,7 @@ export const authMiddleware = (
     req.body.user = verified;
     next();
   } catch (error) {
-    return sendResponse(res, 400, {
+    return sendResponse(res, 401, {
       success: false,
       errorMessage: "Invalid Token",
     });

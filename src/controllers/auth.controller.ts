@@ -79,7 +79,7 @@ export const signin = async (req: Request, res: Response) => {
     }
 
     const token = jwt.sign({ userId: user._id }, secret_key, {
-      expiresIn: "1h",
+      expiresIn: "2m",
     });
 
     // #TODO: create a new collection for refresh tokens in the db with userId and refreshToken
@@ -90,10 +90,17 @@ export const signin = async (req: Request, res: Response) => {
 
     await refreshToken.create({ userId: user._id, refreshToken: refreshtoken });
 
+    res.cookie("refreshtoken", refreshtoken, {
+      httpOnly: true,
+      secure: false,
+      sameSite: "lax",
+      maxAge: 30 * 24 * 60 * 60 * 1000,
+    });
+
     return sendResponse(res, 200, {
       success: true,
       successMessage: "Sign in successfull",
-      data: { token, refreshtoken, user },
+      data: { token, user },
     });
   } catch (error) {
     return sendResponse(res, 500, {
@@ -134,8 +141,9 @@ export const verifyEmail = async (req: Request, res: Response) => {
 
 export const refresh_Token = async (req: Request, res: Response) => {
   try {
-    const { token } = req.body;
-    if (!token) {
+    const { refreshtoken } = req.cookies;
+    console.log(refreshtoken);
+    if (!refreshtoken) {
       return sendResponse(res, 401, {
         success: false,
         errorMessage: "Refresh Token is required",
@@ -145,7 +153,7 @@ export const refresh_Token = async (req: Request, res: Response) => {
     let decoded: JwtPayload;
 
     try {
-      decoded = jwt.verify(token, secret_key) as JwtPayload;
+      decoded = jwt.verify(refreshtoken, secret_key) as JwtPayload;
     } catch (error) {
       return sendResponse(res, 403, {
         success: false,
@@ -155,7 +163,7 @@ export const refresh_Token = async (req: Request, res: Response) => {
 
     const storedToken = await refreshToken.findOne({
       userId: decoded.userId,
-      refreshToken: token,
+      refreshToken: refreshtoken,
     });
 
     if (!storedToken) {
@@ -269,9 +277,10 @@ export const resetPassword = async (req: Request, res: Response) => {
 
 export const user = async (req: Request, res: Response) => {
   try {
-    const {userId} = req.body.user;
-    console.log(userId,"userId")
-    const userInfo = await User.findById({_id:userId});
+    const token = req.cookies;
+    console.log(token, "token coming from cookies");
+    const { userId } = req.body.user;
+    const userInfo = await User.findById({ _id: userId });
     if (!user) {
       return sendResponse(res, 400, {
         success: false,
