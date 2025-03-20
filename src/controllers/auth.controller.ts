@@ -82,13 +82,36 @@ export const signin = async (req: Request, res: Response) => {
       expiresIn: "2m",
     });
 
-    // #TODO: create a new collection for refresh tokens in the db with userId and refreshToken
+    // Check if the user already has a refresh token in DB
+    let existingRefreshToken = await refreshToken.findOne({ userId: user._id });
+    console.log(existingRefreshToken, "existingRefreshToken");
 
-    const refreshtoken = jwt.sign({ userId: user._id }, secret_key, {
-      expiresIn: "7d",
-    });
+    let refreshtoken: string;
 
-    await refreshToken.create({ userId: user._id, refreshToken: refreshtoken });
+    if (existingRefreshToken) {
+      try {
+        // Verify if the existing refresh token is still valid
+        jwt.verify(existingRefreshToken.refreshToken, secret_key);
+        refreshtoken = existingRefreshToken.refreshToken;
+      } catch (error) {
+        refreshtoken = jwt.sign({ userId: user._id }, secret_key, {
+          expiresIn: "7d",
+        });
+        await refreshToken.updateOne(
+          { userId: user._id },
+          { refreshToken: refreshtoken }
+        );
+      }
+    } else {
+      // If no refresh token exists, create a new one
+      refreshtoken = jwt.sign({ userId: user._id }, secret_key, {
+        expiresIn: "7d",
+      });
+      await refreshToken.create({
+        userId: user._id,
+        refreshToken: refreshtoken,
+      });
+    }
 
     res.cookie("refreshtoken", refreshtoken, {
       httpOnly: true,
@@ -273,6 +296,18 @@ export const resetPassword = async (req: Request, res: Response) => {
       errorMessage: "Internal Server Error",
     });
   }
+};
+
+export const logoutUser = async (req: Request, res: Response) => {
+  res.clearCookie("refreshtoken", {
+    httpOnly: true,
+    secure: false,
+    sameSite: "lax",
+  });
+  return sendResponse(res, 200, {
+    success: true,
+    successMessage: "Logged out successfully",
+  });
 };
 
 export const user = async (req: Request, res: Response) => {
