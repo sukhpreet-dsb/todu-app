@@ -3,6 +3,7 @@ import morgan from "morgan";
 import helmet from "helmet";
 import cors from "cors";
 import dotenv from "dotenv";
+import cookieParser from "cookie-parser";
 
 import * as middlewares from "./middlewares";
 import todoRoutes from "./routes/todo.routes";
@@ -12,13 +13,15 @@ import MessageResponse from "./interfaces/MessageResponse";
 dotenv.config();
 
 const app = express();
+app.use(express.json());
+app.use(cookieParser());
 
 app.use(cors({
   origin: 'http://localhost:5173',
+  credentials : true
 }));
 app.use(morgan("dev"));
 app.use(helmet());
-app.use(express.json());
 
 app.get<{}, MessageResponse>("/", (_req, res) => {
   res.json({
